@@ -102,38 +102,39 @@ public final class AutoWire implements IComponentInitializationListener {
 
 		// every stack element could declare the desired child component as a field
 		for (final AtomicReference<Component> tryal : stack) {
-			try {
-				final Field field = tryal.get().getClass().getDeclaredField(id);
-				if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
-					field.setAccessible(true);
-					// FIXME auto determine the enclosing type. can be any of the stack
-					// elements
-					instance = getInstance(field.getType(), tryal.get(), id);
-					field.set(tryal.get(), instance);
+			Class<?> clazz = tryal.get().getClass();
+			while (Component.class.isAssignableFrom(clazz)) {
+				try {
+					final Field field = clazz.getDeclaredField(id);
+					if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
+						field.setAccessible(true);
+						instance = getInstance(field.getType(), stack, id);
+						field.set(tryal.get(), instance);
+					}
 				}
+				catch (final NoSuchFieldException e) {
+					// continue
+				}
+				catch (final SecurityException e) {
+					throw new RuntimeException(e);
+				}
+				catch (final IllegalArgumentException e) {
+					throw new RuntimeException(e);
+				}
+				catch (final IllegalAccessException e) {
+					throw new RuntimeException(e);
+				}
+				catch (final InstantiationException e) {
+					throw new RuntimeException(e);
+				}
+				catch (final InvocationTargetException e) {
+					throw new RuntimeException(e);
+				}
+				catch (final NoSuchMethodException e) {
+					throw new RuntimeException(e);
+				}
+				clazz = clazz.getSuperclass();
 			}
-			catch (final NoSuchFieldException e) {
-				// continue
-			}
-			catch (final SecurityException e) {
-				e.printStackTrace();
-			}
-			catch (final IllegalArgumentException e) {
-				e.printStackTrace();
-			}
-			catch (final IllegalAccessException e) {
-				e.printStackTrace();
-			}
-			catch (final InstantiationException e) {
-				e.printStackTrace();
-			}
-			catch (final InvocationTargetException e) {
-				e.printStackTrace();
-			}
-			catch (final NoSuchMethodException e) {
-				e.printStackTrace();
-			}
-
 			if (instance != null) {
 				break;
 			}
@@ -141,19 +142,24 @@ public final class AutoWire implements IComponentInitializationListener {
 		return instance;
 	}
 
-	private Component getInstance(final Class<?> componentClass, final Component enclosingInstance, final String id) throws NoSuchMethodException, InstantiationException,
-	    IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		try {
+	private Component getInstance(final Class<?> componentClass, final Stack<AtomicReference<Component>> stack, final String id) throws NoSuchMethodException,
+	    InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		if (componentClass.getEnclosingClass() == null) {
 			// -- Static inner class or normal class
 			final Constructor<?> constructor = componentClass.getDeclaredConstructor(String.class);
 			constructor.setAccessible(true);
 			return (Component) constructor.newInstance(id);
 		}
-		catch (final NoSuchMethodException e) {
-			// -- Normal inner class
-			final Constructor<?> constructor = componentClass.getDeclaredConstructor(enclosingInstance.getClass(), String.class);
-			constructor.setAccessible(true);
-			return (Component) constructor.newInstance(enclosingInstance, id);
+		else {
+			for (final AtomicReference<Component> enclosing : stack) {
+				if (enclosing.get() != null && componentClass.getEnclosingClass().isAssignableFrom(enclosing.get().getClass())) {
+					final Constructor<?> constructor = componentClass.getDeclaredConstructor(componentClass.getEnclosingClass(), String.class);
+					constructor.setAccessible(true);
+					return (Component) constructor.newInstance(enclosing.get(), id);
+				}
+			}
+			throw new RuntimeException("Unable to initialize inner class " + componentClass.getClass().getSimpleName() + " with id " + id
+			    + ". Enclosing class is not in the component hierarchy.");
 		}
 	}
 

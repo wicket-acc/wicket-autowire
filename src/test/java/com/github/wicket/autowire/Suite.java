@@ -4,7 +4,6 @@ import org.apache.wicket.util.tester.WicketTester;
 import org.junit.Before;
 import org.junit.Test;
 
-
 public class Suite {
 
 	private WicketTester tester;
@@ -17,6 +16,11 @@ public class Suite {
 	@Test
 	public void testBasicPage() {
 		tester.startPage(BasicPage.class);
+	}
+
+	@Test
+	public void testSubClassPage() {
+		tester.startPage(SubClassPage.class);
 	}
 
 	@Test
