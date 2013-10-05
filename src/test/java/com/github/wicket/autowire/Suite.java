@@ -1,13 +1,9 @@
-package de.fj.test;
+package com.github.wicket.autowire;
 
 import org.apache.wicket.util.tester.WicketTester;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.fj.test.autowire.BasicPage;
-import de.fj.test.autowire.BasicPanel;
-import de.fj.test.autowire.BorderPage;
-import de.fj.test.autowire.ContainerPage;
 
 public class Suite {
 

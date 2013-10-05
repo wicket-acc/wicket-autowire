@@ -1,10 +1,11 @@
-package de.fj.test.autowire;
+package com.github.wicket.autowire;
 
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
 
-import de.fj.test.Component;
+import com.github.wicket.autowire.Component;
+
 
 public class BasicPanel extends Panel {
 

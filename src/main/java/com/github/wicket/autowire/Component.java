@@ -1,4 +1,4 @@
-package de.fj.test;
+package com.github.wicket.autowire;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

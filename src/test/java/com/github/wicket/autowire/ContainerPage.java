@@ -1,10 +1,11 @@
-package de.fj.test.autowire;
+package com.github.wicket.autowire;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 
-import de.fj.test.Component;
+import com.github.wicket.autowire.Component;
+
 
 public class ContainerPage extends WebPage {
 

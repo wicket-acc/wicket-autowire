@@ -1,4 +1,4 @@
-package de.fj.test;
+package com.github.wicket.autowire;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -104,7 +104,7 @@ public final class AutoWire implements IComponentInitializationListener {
 		for (final AtomicReference<Component> tryal : stack) {
 			try {
 				final Field field = tryal.get().getClass().getDeclaredField(id);
-				if (field.isAnnotationPresent(de.fj.test.Component.class)) {
+				if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
 					field.setAccessible(true);
 					// FIXME auto determine the enclosing type. can be any of the stack
 					// elements
