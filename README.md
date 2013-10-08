@@ -1,4 +1,4 @@
-wicket-autowire [![Build Status](https://travis-ci.org/frido37/wicket-autowire.png?branch=master)](https://travis-ci.org/frido37/wicket-autowire)
+wicket-autowire [![Build Status](https://travis-ci.org/wicket-acc/wicket-autowire.png?branch=master)](https://travis-ci.org/frido37/wicket-autowire)
 =================================================================================================================================================
 
 Annotation base auto wire of wicket components.
