@@ -117,16 +117,139 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	MAY
+	7
+	Publishing from GitHub to Maven Central
+	Unless your project is hosted by an approved foundation such as Apache or
+	Codehaus, you won't be able publish artifacts to Maven Central
+	directly. Instead, Sonatype provide their own Nexus repositories for
+	open source projects, and synchronise these with Maven Central.
+
+	In this post I've tried to condense Sonatype's instructions, and include
+	snippets from the POM file of my project, redis-launcher.
+
+	Getting set up
+
+	Add source code management information to your POM:
+
+	1
+	2
+	3
+	4
+	5
+	<scm>
+		<connection>scm:git:git://github.com/hertzsprung/redis-launcher.git</connection>
+		<developerConnection>scm:git:git@github.com:hertzsprung/redis-launcher.git</developerConnection>
+		<url>http://github.com/hertzsprung/redis-launcher</url>
+	</scm>
+	view rawpom.xml hosted with ❤ by GitHub
+	Create a GPG key pair and publish the public key. See the Sonatype
+	documentation for instructions.
+	Check that your project POM meets the requirements for syncing
+	Create a Sonatype JIRA account and raise a ticket to get your Nexus
+	repository set up
+	Using Maven to release to Sonatype Nexus repository
+
+	Add the maven-release-plugin to your POM:
+
+	1
+	2
+	3
+	4
+	5
+	6
+	7
+	8
+	<plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-release-plugin</artifactId>
+		<version>2.2.2</version>
+		<configuration>
+			<arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
+		</configuration>
+	</plugin>
+	view rawpom.xml hosted with ❤ by GitHub
+	Add the Sonatype repositories:
+
+	1
+	2
+	3
+	4
+	5
+	6
+	7
+	8
+	9
+	10
+	11
+	12
+	<distributionManagement>
+		<snapshotRepository>
+			<id>sonatype-nexus-snapshots</id>
+			<name>Sonatype Nexus snapshot repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>sonatype-nexus-staging</id>
+			<name>Sonatype Nexus release repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+	<profiles>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.4</version>
+						<configuration>
+							<passphrase>${gpg.passphrase}</passphrase>
+						</configuration>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+	<distributionManagement>
+		<snapshotRepository>
+			<id>sonatype-nexus-snapshots</id>
+			<name>Sonatype Nexus snapshot repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>sonatype-nexus-staging</id>
+			<name>Sonatype Nexus release repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 	<scm>
 		<connection>scm:git:git@github.com:wicket-acc/wicket-autowire.git</connection>
 		<url>scm:git:git@github.com:wicket-acc/wicket-autowire.git</url>
 		<developerConnection>scm:git:git@github.com:wicket-acc/wicket-autowire.git</developerConnection>
 	</scm>
 	<developers>
-	    <developer>
-	        <name>Fridolin Jackstadt</name>
-	        <email>frido37@gmail.com</email>
-	    </developer>
+		<developer>
+			<name>Fridolin Jackstadt</name>
+			<email>frido37@gmail.com</email>
+		</developer>
 	</developers>
 	<url>https://github.com/wicket-acc/wicket-autowire</url>
 </project>
