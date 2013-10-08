@@ -17,7 +17,8 @@
 	<artifactId>wicket-autowire</artifactId>
 	<packaging>jar</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<description></description>
+	<name>Wicket Accessoires :: Wicket Autowire</name>
+	<description>Annotation based auto wiring of wicket components.</description>
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -127,4 +128,5 @@
 	        <email>frido37@gmail.com</email>
 	    </developer>
 	</developers>
+	<url>https://github.com/wicket-acc/wicket-autowire</url>
 </project>
