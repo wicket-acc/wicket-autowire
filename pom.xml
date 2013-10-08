@@ -116,4 +116,15 @@
 			</plugin>
 		</plugins>
 	</build>
+	<scm>
+		<connection>scm:git:git@github.com:wicket-acc/wicket-autowire.git</connection>
+		<url>scm:git:git@github.com:wicket-acc/wicket-autowire.git</url>
+		<developerConnection>scm:git:git@github.com:wicket-acc/wicket-autowire.git</developerConnection>
+	</scm>
+	<developers>
+	    <developer>
+	        <name>Fridolin Jackstadt</name>
+	        <email>frido37@gmail.com</email>
+	    </developer>
+	</developers>
 </project>
