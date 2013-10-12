@@ -174,8 +174,8 @@
 
 
 	<scm>
-		<connection>scm:git:git@github.com:wicket-acc/wicket-autowire.git</connection>
-		<url>scm:git:git@github.com:wicket-acc/wicket-autowire.git</url>
+		<url>https://github.com/wicket-acc/wicket-autowire.git</url>
+		<connection>scm:git:git@github.com/wicket-acc/wicket-autowire.git</connection>
 		<developerConnection>scm:git:git@github.com:wicket-acc/wicket-autowire.git</developerConnection>
 	</scm>
 	<developers>
