@@ -1,14 +1,19 @@
 wicket-autowire [![Build Status](https://travis-ci.org/wicket-acc/wicket-autowire.png?branch=master)](https://travis-ci.org/frido37/wicket-autowire)
 =================================================================================================================================================
 
-Annotation base auto wire of wicket components.
+Annotation base auto wire of wicket components. We deploy do maven central, so just add the following lins to your pom.xml:
 
-To enable, add the auto wire listener in your applicaion's init() method:
+	<dependency>
+		<groupId>com.github.wicket-acc</groupId>
+		<artifactId>wicket-autowire</artifactId>
+		<version>0.0.2</version>
+	</dependency>
+
+To enable in your wicket application, add the listener in your applicaion's init() method:
 
 	getComponentInitializationListeners().add(new AutoWire());
-  
 
-With annotations:
+Now components are built and added to page automatically and at the right place. The wicket id is taken from the field's name:
 
 	public class BasicPanel extends Panel {
 	
@@ -22,20 +27,5 @@ With annotations:
 		}
 	
 	}
-	
-Without annotations:
-	
-	public class BasicPanel extends Panel {
-	
-		private static final long serialVersionUID = 1L;
-	
-		public BasicPanel(final String id) {
-			super(id);
-		}
-	
-		@Override
-		protected void onInitialize() {
-			super.onInitialize();
-			add(new Label("label"));
-		}
-	}
+
+The only precondition is a single argument constructor. For a Link we recommend to use a non-anonymous inner class.
