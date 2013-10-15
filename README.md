@@ -1,7 +1,7 @@
 wicket-autowire [![Build Status](https://travis-ci.org/wicket-acc/wicket-autowire.png?branch=master)](https://travis-ci.org/frido37/wicket-autowire)
 =================================================================================================================================================
 
-Annotation base auto wire of wicket components. We deploy do maven central, so just add the following lines to your pom.xml:
+Annotation based auto wiring of wicket components. We deploy to maven central, so just add the following lines to your pom.xml:
 
 	<dependency>
 		<groupId>com.github.wicket-acc</groupId>
