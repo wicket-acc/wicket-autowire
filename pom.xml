@@ -38,6 +38,7 @@
 			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket-core</artifactId>
 			<version>${wicket.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<!-- LOGGING DEPENDENCIES - LOG4J -->
 		<dependency>
