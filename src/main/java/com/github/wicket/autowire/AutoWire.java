@@ -72,7 +72,8 @@ public final class AutoWire implements IComponentInitializationListener {
             }
           }
           // maintain bread crumbs and build components
-          if (!(tag instanceof WicketTag) || tag.getName().equals(WicketContainerResolver.CONTAINER)) {
+          if (!(tag instanceof WicketTag) && !tag.isAutoComponentTag()
+              || tag.getName().equals(WicketContainerResolver.CONTAINER)) {
             if (tag.isOpen() || tag.isOpenClose()) {
               final Component container = stack.peek().get();
               final Component cmp;
@@ -105,7 +106,7 @@ public final class AutoWire implements IComponentInitializationListener {
                 stack.push(new AtomicReference<Component>(cmp));
               }
             }
-            else if (tag.isClose()) {
+            else if (tag.isClose() && !tag.getOpenTag().isAutoComponentTag()) {
               stack.pop();
             }
           }
@@ -115,9 +116,6 @@ public final class AutoWire implements IComponentInitializationListener {
           throw new RuntimeException("Stack must only contain one element " + stack);
         }
 
-        if (component instanceof IAutoWireListener) {
-          ((IAutoWireListener) component).onAutoWired();
-        }
       }
       catch (final MarkupNotFoundException e) {
         return;
