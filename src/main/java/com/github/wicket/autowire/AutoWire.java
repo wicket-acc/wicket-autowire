@@ -32,6 +32,7 @@ import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.WicketTag;
 import org.apache.wicket.markup.html.TransparentWebMarkupContainer;
 import org.apache.wicket.markup.html.border.Border;
+import org.apache.wicket.markup.resolver.WicketContainerResolver;
 
 public final class AutoWire implements IComponentInitializationListener {
 
@@ -39,7 +40,11 @@ public final class AutoWire implements IComponentInitializationListener {
   public void onInitialize(final Component component) {
     if (component instanceof MarkupContainer && !(component instanceof TransparentWebMarkupContainer)) {
       try {
-        final IMarkupFragment markup = ((MarkupContainer) component).getMarkup(null);
+        IMarkupFragment markup = ((MarkupContainer) component).getMarkup(null);
+
+        if (markup == null) {
+          return;
+        }
 
         final MarkupStream stream = new MarkupStream(markup);
 
@@ -67,7 +72,7 @@ public final class AutoWire implements IComponentInitializationListener {
             }
           }
           // maintain bread crumbs and build components
-          else {
+          if (!(tag instanceof WicketTag) || tag.getName().equals(WicketContainerResolver.CONTAINER)) {
             if (tag.isOpen() || tag.isOpenClose()) {
               final Component container = stack.peek().get();
               final Component cmp;
@@ -108,6 +113,10 @@ public final class AutoWire implements IComponentInitializationListener {
         }
         if (stack.size() != 1) {
           throw new RuntimeException("Stack must only contain one element " + stack);
+        }
+
+        if (component instanceof IAutoWireListener) {
+          ((IAutoWireListener) component).onAutoWired();
         }
       }
       catch (final MarkupNotFoundException e) {

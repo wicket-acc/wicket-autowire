@@ -30,6 +30,9 @@ public class ContainerPage extends WebPage {
   WebMarkupContainer container;
 
   @Component
+  WebMarkupContainer subContainer;
+
+  @Component
   Label label;
 
 }
