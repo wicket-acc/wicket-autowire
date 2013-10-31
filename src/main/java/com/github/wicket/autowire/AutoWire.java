@@ -136,8 +136,11 @@ public final class AutoWire implements IComponentInitializationListener {
           final Field field = clazz.getDeclaredField(id);
           if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
             field.setAccessible(true);
-            instance = getInstance(field.getType(), stack, id);
-            field.set(tryal.get(), instance);
+            instance = (Component) field.get(tryal.get());
+            if (instance == null) {
+              instance = getInstance(field.getType(), stack, id);
+              field.set(tryal.get(), instance);
+            }
           }
         }
         catch (final NoSuchFieldException e) {

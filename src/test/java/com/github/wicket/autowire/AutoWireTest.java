@@ -53,4 +53,10 @@ public class AutoWireTest {
   public void testBorder() {
     this.tester.startPage(BorderPage.class);
   }
+
+  @Test
+  public void testManualInstantiation() {
+    this.tester.startPage(ManualInstantiationPage.class);
+    this.tester.assertLabel("test", "test");
+  }
 }
