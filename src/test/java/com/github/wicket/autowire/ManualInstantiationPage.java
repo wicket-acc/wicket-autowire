@@ -18,12 +18,23 @@ package com.github.wicket.autowire;
 
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.Model;
 
 public class ManualInstantiationPage extends WebPage {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  @Component
-  Label test = new Label("test", "test");
+	@Component
+	Label test1 = new Label("test1", "test1");
+
+	@Component
+	Label test2;
+
+	@Override
+	protected void onInitialize() {
+		super.onInitialize();
+
+		test2.setDefaultModel(Model.of("test2"));
+	}
 
 }

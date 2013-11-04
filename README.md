@@ -9,9 +9,9 @@ Annotation based auto wiring of wicket components. We deploy to maven central, s
 		<version>0.0.2</version>
 	</dependency>
 
-To enable in your wicket application, add the listener in your applicaion's init() method:
+To enable in your wicket application, install wicket-auto-wire in your application's init() method:
 
-	getComponentInitializationListeners().add(new AutoWire());
+	AutoWire.install(this);
 
 Now components are built and added to page automatically and at the right place. The wicket id is taken from the field's name:
 
