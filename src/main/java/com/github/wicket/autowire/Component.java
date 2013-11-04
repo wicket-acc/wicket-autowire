@@ -22,8 +22,6 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Component {
 
-  boolean add() default false;
-
   String id() default "";
 
   boolean inject() default true;
