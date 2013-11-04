@@ -16,18 +16,13 @@
  */
 package com.github.wicket.autowire;
 
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
-import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.TextField;
 
-public class ContainerPage extends WebPage {
+public class MissingCloseTagPage extends WebPage {
 
   private static final long serialVersionUID = 1L;
 
-  @Component WebMarkupContainer container;
-
-  @Component WebMarkupContainer subContainer;
-
-  @Component Label label;
+  @Component TextField<String> test = new TextField<String>("test");
 
 }

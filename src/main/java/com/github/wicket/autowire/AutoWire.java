@@ -135,7 +135,7 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
                 }
               }
               // push even if cmp is null, to track if parent is auto-wired
-              if (tag.isOpen()) {
+              if (tag.isOpen() && !tag.hasNoCloseTag()) {
                 stack.push(new AtomicReference<Component>(cmp));
               }
             }

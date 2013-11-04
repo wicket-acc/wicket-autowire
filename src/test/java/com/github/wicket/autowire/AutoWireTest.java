@@ -65,4 +65,9 @@ public class AutoWireTest {
     this.tester.assertLabel("test1", "test1");
     this.tester.assertLabel("test2", "test2");
   }
+
+  @Test
+  public void testMissingCloseTag() {
+    this.tester.startPage(MissingCloseTagPage.class);
+  }
 }
