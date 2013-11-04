@@ -20,9 +20,18 @@ import org.apache.wicket.markup.html.basic.Label;
 
 public class SubClassPage extends BasicPage {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  @Component
-  Label label2;
+	@Component
+	Label label2;
+
+	@Override
+	protected void onInitialize() {
+		super.onInitialize();
+
+		if (link == null) {
+			throw new IllegalStateException("link must be assigned!");
+		}
+	}
 
 }
