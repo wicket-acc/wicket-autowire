@@ -19,6 +19,7 @@ package com.github.wicket.autowire;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
@@ -59,9 +60,11 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
       while (Component.class.isAssignableFrom(clazz)) {
         for (final Field field : clazz.getDeclaredFields()) {
           if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
-            String id = field.getAnnotation(com.github.wicket.autowire.Component.class).id();
-            String name = id.isEmpty() ? field.getName() : id;
-            buildComponent(parent, name);
+            if (field.getAnnotation(com.github.wicket.autowire.Component.class).inject()) {
+              String id = field.getAnnotation(com.github.wicket.autowire.Component.class).id();
+              String name = id.isEmpty() ? field.getName() : id;
+              buildComponent(parent, name);
+            }
           }
         }
         clazz = clazz.getSuperclass();
@@ -187,8 +190,13 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
             field.setAccessible(true);
             instance = (Component) field.get(tryal.get());
             if (instance == null) {
-              instance = getInstance(field.getType(), stack, id);
-              field.set(tryal.get(), instance);
+              if (field.getAnnotation(com.github.wicket.autowire.Component.class).inject()) {
+                instance = getInstance(field.getType(), stack, id);
+                field.set(tryal.get(), instance);
+              }
+              else {
+                throw new RuntimeException("Field " + field.getName() + " must be assigned manually!");
+              }
             }
           }
         }
@@ -229,7 +237,7 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
                                                 IllegalAccessException,
                                                 IllegalArgumentException,
                                                 InvocationTargetException {
-    if (componentClass.getEnclosingClass() == null) {
+    if (componentClass.getEnclosingClass() == null || Modifier.isStatic(componentClass.getModifiers())) {
       // -- Static inner class or normal class
       final Constructor<?> constructor = componentClass.getDeclaredConstructor(String.class);
       constructor.setAccessible(true);

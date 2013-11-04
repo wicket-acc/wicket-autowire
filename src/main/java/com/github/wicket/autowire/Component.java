@@ -26,4 +26,6 @@ public @interface Component {
 
   String id() default "";
 
+  boolean inject() default true;
+
 }
