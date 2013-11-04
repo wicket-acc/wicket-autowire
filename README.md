@@ -9,7 +9,7 @@ Annotation based auto wiring of wicket components. We deploy to maven central, s
 		<version>0.0.3</version>
 	</dependency>
 
-To enable in your wicket application, install wicket-auto-wire in your application's init() method:
+To enable in your wicket application, install wicket-autowire in your application's init() method:
 
 	AutoWire.install(this);
 
