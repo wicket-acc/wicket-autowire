@@ -24,4 +24,6 @@ public @interface Component {
 
   boolean add() default false;
 
+  String id() default "";
+
 }
