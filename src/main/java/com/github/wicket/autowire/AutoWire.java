@@ -40,187 +40,215 @@ import org.apache.wicket.markup.resolver.WicketContainerResolver;
 
 public final class AutoWire implements IComponentInitializationListener, IComponentInstantiationListener {
 
-	private AutoWire() {
+  private AutoWire() {
 
-	}
+  }
 
-	public static void install(final Application application) {
-		final AutoWire instance = new AutoWire();
-		application.getComponentInitializationListeners().add(instance);
-		application.getComponentInstantiationListeners().add(instance);
-	}
+  public static void install(final Application application) {
+    final AutoWire instance = new AutoWire();
+    application.getComponentInitializationListeners().add(instance);
+    application.getComponentInstantiationListeners().add(instance);
+  }
 
-	@Override
-	public void onInstantiation(final Component component) {
-		if (isAutoWiringPossible(component)) {
-			Class<?> clazz = component.getClass();
-			final List<AtomicReference<Component>> parent = Arrays.asList(new AtomicReference<Component>(component));
-			while (Component.class.isAssignableFrom(clazz)) {
-				for (final Field field : clazz.getDeclaredFields()) {
-					if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
-						buildComponent(parent, field.getName());
-					}
-				}
-				clazz = clazz.getSuperclass();
-			}
-		}
-	}
+  @Override
+  public void onInstantiation(final Component component) {
+    if (isAutoWiringPossible(component)) {
+      Class<?> clazz = component.getClass();
+      @SuppressWarnings("unchecked")
+      final List<AtomicReference<Component>> parent = Arrays.asList(new AtomicReference<Component>(component));
+      while (Component.class.isAssignableFrom(clazz)) {
+        for (final Field field : clazz.getDeclaredFields()) {
+          if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
+            String id = field.getAnnotation(com.github.wicket.autowire.Component.class).id();
+            String name = id.isEmpty() ? field.getName() : id;
+            buildComponent(parent, name);
+          }
+        }
+        clazz = clazz.getSuperclass();
+      }
+    }
+  }
 
-	@Override
-	public void onInitialize(final Component component) {
-		if (isAutoWiringPossible(component)) {
-			try {
-				final IMarkupFragment markup = ((MarkupContainer) component).getMarkup(null);
+  @Override
+  public void onInitialize(final Component component) {
+    if (isAutoWiringPossible(component)) {
+      try {
+        final IMarkupFragment markup = ((MarkupContainer) component).getMarkup(null);
 
-				if (markup == null) {
-					return;
-				}
+        if (markup == null) {
+          return;
+        }
 
-				final MarkupStream stream = new MarkupStream(markup);
+        final MarkupStream stream = new MarkupStream(markup);
 
-				final Stack<AtomicReference<Component>> stack = new Stack<AtomicReference<Component>>();
-				stack.push(new AtomicReference<Component>(component));
+        final Stack<AtomicReference<Component>> stack = new Stack<AtomicReference<Component>>();
+        stack.push(new AtomicReference<Component>(component));
 
-				// detect borders.
-				boolean addToBorder = false;
+        // detect borders.
+        boolean addToBorder = false;
 
-				while (stream.skipUntil(ComponentTag.class)) {
-					final ComponentTag tag = stream.getTag();
-					// track border tags
-					if (tag instanceof WicketTag) {
-						if (((WicketTag) tag).isBorderTag() && tag.isOpen()) {
-							addToBorder = true;
-						}
-						else if (((WicketTag) tag).isBodyTag() && tag.isOpen()) {
-							addToBorder = false;
-						}
-						else if (((WicketTag) tag).isBodyTag() && tag.isClose()) {
-							addToBorder = true;
-						}
-						else if (((WicketTag) tag).isBorderTag() && tag.isClose()) {
-							addToBorder = false;
-						}
-					}
-					// maintain bread crumbs and build components
-					if (!(tag instanceof WicketTag) && !tag.isAutoComponentTag() || tag.getName().equals(WicketContainerResolver.CONTAINER)) {
-						if (tag.isOpen() || tag.isOpenClose()) {
-							final Component container = stack.peek().get();
-							final Component cmp;
-							if (container == null) {
-								cmp = null;
-							}
-							else {
-								cmp = buildComponent(stack, tag.getId());
-							}
-							if (cmp != null) {
-								if (container instanceof MarkupContainer) {
-									if (addToBorder && container instanceof Border) {
-										((Border) container).addToBorder(cmp);
-									}
-									else {
-										((MarkupContainer) container).add(cmp);
-									}
-								}
-								else if (container == null) {
-									throw new RuntimeException("component " + tag.getId() + " was auto wired, but its parent not!");
-								}
-								else {
-									throw new RuntimeException("only containers may contain child elements. type of " + container + " is not a container!");
-								}
-							}
-							// push even if cmp is null, to track if parent is auto-wired
-							if (tag.isOpen()) {
-								stack.push(new AtomicReference<Component>(cmp));
-							}
-						}
-						else if (tag.isClose() && !tag.getOpenTag().isAutoComponentTag()) {
-							stack.pop();
-						}
-					}
-					stream.next();
-				}
-				if (stack.size() != 1) {
-					throw new RuntimeException("Stack must only contain one element " + stack);
-				}
+        while (stream.skipUntil(ComponentTag.class)) {
+          final ComponentTag tag = stream.getTag();
+          // track border tags
+          if (tag instanceof WicketTag) {
+            if (((WicketTag) tag).isBorderTag() && tag.isOpen()) {
+              addToBorder = true;
+            }
+            else if (((WicketTag) tag).isBodyTag() && tag.isOpen()) {
+              addToBorder = false;
+            }
+            else if (((WicketTag) tag).isBodyTag() && tag.isClose()) {
+              addToBorder = true;
+            }
+            else if (((WicketTag) tag).isBorderTag() && tag.isClose()) {
+              addToBorder = false;
+            }
+          }
+          // maintain bread crumbs and build components
+          if (!(tag instanceof WicketTag) && !tag.isAutoComponentTag()
+              || tag.getName().equals(WicketContainerResolver.CONTAINER)) {
+            if (tag.isOpen() || tag.isOpenClose()) {
+              final Component container = stack.peek().get();
+              final Component cmp;
+              if (container == null) {
+                cmp = null;
+              }
+              else {
+                cmp = buildComponent(stack, tag.getId());
+              }
+              if (cmp != null) {
+                if (container instanceof MarkupContainer) {
+                  if (addToBorder && container instanceof Border) {
+                    ((Border) container).addToBorder(cmp);
+                  }
+                  else {
+                    ((MarkupContainer) container).add(cmp);
+                  }
+                }
+                else if (container == null) {
+                  throw new RuntimeException("component " + tag.getId()
+                                             + " was auto wired, but its parent not!");
+                }
+                else {
+                  throw new RuntimeException("only containers may contain child elements. type of "
+                                             + container + " is not a container!");
+                }
+              }
+              // push even if cmp is null, to track if parent is auto-wired
+              if (tag.isOpen()) {
+                stack.push(new AtomicReference<Component>(cmp));
+              }
+            }
+            else if (tag.isClose() && !tag.getOpenTag().isAutoComponentTag()) {
+              stack.pop();
+            }
+          }
+          stream.next();
+        }
+        if (stack.size() != 1) {
+          throw new RuntimeException("Stack must only contain one element " + stack);
+        }
 
-			}
-			catch (final MarkupNotFoundException e) {
-				return;
-			}
-		}
-	}
+      }
+      catch (final MarkupNotFoundException e) {
+        return;
+      }
+    }
+  }
 
-	private boolean isAutoWiringPossible(final Component component) {
-		return component instanceof MarkupContainer && !(component instanceof TransparentWebMarkupContainer);
-	}
+  private boolean isAutoWiringPossible(final Component component) {
+    return component instanceof MarkupContainer && !(component instanceof TransparentWebMarkupContainer);
+  }
 
-	private Component buildComponent(final Iterable<AtomicReference<Component>> stack, final String id) {
-		Component instance = null;
+  private Component buildComponent(final Iterable<AtomicReference<Component>> stack, final String id) {
+    Component instance = null;
 
-		// every stack element could declare the desired child component as a field
-		for (final AtomicReference<Component> tryal : stack) {
-			Class<?> clazz = tryal.get().getClass();
-			while (Component.class.isAssignableFrom(clazz)) {
-				try {
-					final Field field = clazz.getDeclaredField(id);
-					if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
-						field.setAccessible(true);
-						instance = (Component) field.get(tryal.get());
-						if (instance == null) {
-							instance = getInstance(field.getType(), stack, id);
-							field.set(tryal.get(), instance);
-						}
-					}
-				}
-				catch (final NoSuchFieldException e) {
-					// continue
-				}
-				catch (final SecurityException e) {
-					throw new RuntimeException(e);
-				}
-				catch (final IllegalArgumentException e) {
-					throw new RuntimeException(e);
-				}
-				catch (final IllegalAccessException e) {
-					throw new RuntimeException(e);
-				}
-				catch (final InstantiationException e) {
-					throw new RuntimeException(e);
-				}
-				catch (final InvocationTargetException e) {
-					throw new RuntimeException(e);
-				}
-				catch (final NoSuchMethodException e) {
-					throw new RuntimeException(e);
-				}
-				clazz = clazz.getSuperclass();
-			}
-			if (instance != null) {
-				break;
-			}
-		}
-		return instance;
-	}
+    // every stack element could declare the desired child component as a field
+    for (final AtomicReference<Component> tryal : stack) {
+      Class<?> clazz = tryal.get().getClass();
+      while (Component.class.isAssignableFrom(clazz)) {
+        try {
+          Field field = null;
+          // look for annotated field
+          for (Field iter : clazz.getDeclaredFields()) {
+            if (iter.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
+              com.github.wicket.autowire.Component ann = iter.getAnnotation(com.github.wicket.autowire.Component.class);
+              if (ann.id().equals(id)) {
+                field = iter;
+                break;
+              }
+            }
+          }
+          // fallback to named field
+          if (field == null) {
+            field = clazz.getDeclaredField(id);
+          }
+          if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
+            field.setAccessible(true);
+            instance = (Component) field.get(tryal.get());
+            if (instance == null) {
+              instance = getInstance(field.getType(), stack, id);
+              field.set(tryal.get(), instance);
+            }
+          }
+        }
+        catch (final NoSuchFieldException e) {
+          // continue
+        }
+        catch (final SecurityException e) {
+          throw new RuntimeException(e);
+        }
+        catch (final IllegalArgumentException e) {
+          throw new RuntimeException(e);
+        }
+        catch (final IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+        catch (final InstantiationException e) {
+          throw new RuntimeException(e);
+        }
+        catch (final InvocationTargetException e) {
+          throw new RuntimeException(e);
+        }
+        catch (final NoSuchMethodException e) {
+          throw new RuntimeException(e);
+        }
+        clazz = clazz.getSuperclass();
+      }
+      if (instance != null) {
+        break;
+      }
+    }
+    return instance;
+  }
 
-	private Component getInstance(final Class<?> componentClass, final Iterable<AtomicReference<Component>> stack, final String id) throws NoSuchMethodException,
-	    InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		if (componentClass.getEnclosingClass() == null) {
-			// -- Static inner class or normal class
-			final Constructor<?> constructor = componentClass.getDeclaredConstructor(String.class);
-			constructor.setAccessible(true);
-			return (Component) constructor.newInstance(id);
-		}
-		else {
-			for (final AtomicReference<Component> enclosing : stack) {
-				if (enclosing.get() != null && componentClass.getEnclosingClass().isAssignableFrom(enclosing.get().getClass())) {
-					final Constructor<?> constructor = componentClass.getDeclaredConstructor(componentClass.getEnclosingClass(), String.class);
-					constructor.setAccessible(true);
-					return (Component) constructor.newInstance(enclosing.get(), id);
-				}
-			}
-			throw new RuntimeException("Unable to initialize inner class " + componentClass.getClass().getSimpleName() + " with id " + id
-			    + ". Enclosing class is not in the component hierarchy.");
-		}
-	}
+  private Component getInstance(final Class<?> componentClass,
+                                final Iterable<AtomicReference<Component>> stack,
+                                final String id) throws NoSuchMethodException,
+                                                InstantiationException,
+                                                IllegalAccessException,
+                                                IllegalArgumentException,
+                                                InvocationTargetException {
+    if (componentClass.getEnclosingClass() == null) {
+      // -- Static inner class or normal class
+      final Constructor<?> constructor = componentClass.getDeclaredConstructor(String.class);
+      constructor.setAccessible(true);
+      return (Component) constructor.newInstance(id);
+    }
+    else {
+      for (final AtomicReference<Component> enclosing : stack) {
+        if (enclosing.get() != null
+            && componentClass.getEnclosingClass().isAssignableFrom(enclosing.get().getClass())) {
+          final Constructor<?> constructor = componentClass.getDeclaredConstructor(componentClass.getEnclosingClass(),
+                                                                                   String.class);
+          constructor.setAccessible(true);
+          return (Component) constructor.newInstance(enclosing.get(), id);
+        }
+      }
+      throw new RuntimeException("Unable to initialize inner class "
+                                 + componentClass.getClass().getSimpleName() + " with id " + id
+                                 + ". Enclosing class is not in the component hierarchy.");
+    }
+  }
 
 }

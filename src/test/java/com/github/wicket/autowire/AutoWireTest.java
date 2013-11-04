@@ -22,42 +22,47 @@ import org.junit.Test;
 
 public class AutoWireTest {
 
-	private WicketTester tester;
+  private WicketTester tester;
 
-	@Before
-	public void setUp() {
-		this.tester = new AutoWireTester();
-	}
+  @Before
+  public void setUp() {
+    this.tester = new AutoWireTester();
+  }
 
-	@Test
-	public void testBasicPage() {
-		this.tester.startPage(BasicPage.class);
-	}
+  @Test
+  public void testBasicPage() {
+    this.tester.startPage(BasicPage.class);
+  }
 
-	@Test
-	public void testSubClassPage() {
-		this.tester.startPage(SubClassPage.class);
-	}
+  @Test
+  public void testSubClassPage() {
+    this.tester.startPage(SubClassPage.class);
+  }
 
-	@Test
-	public void testBasicPanel() {
-		this.tester.startComponentInPage(BasicPanel.class);
-	}
+  @Test
+  public void testBasicPanel() {
+    this.tester.startComponentInPage(BasicPanel.class);
+  }
 
-	@Test
-	public void testContainer() {
-		this.tester.startPage(ContainerPage.class);
-	}
+  @Test
+  public void testContainer() {
+    this.tester.startPage(ContainerPage.class);
+  }
 
-	@Test
-	public void testBorder() {
-		this.tester.startPage(BorderPage.class);
-	}
+  @Test
+  public void testBorder() {
+    this.tester.startPage(BorderPage.class);
+  }
 
-	@Test
-	public void testManualInstantiation() {
-		this.tester.startPage(ManualInstantiationPage.class);
-		this.tester.assertLabel("test1", "test1");
-		this.tester.assertLabel("test2", "test2");
-	}
+  @Test
+  public void testCustomId() {
+    this.tester.startComponentInPage(CustomIdPanel.class);
+  }
+
+  @Test
+  public void testManualInstantiation() {
+    this.tester.startPage(ManualInstantiationPage.class);
+    this.tester.assertLabel("test1", "test1");
+    this.tester.assertLabel("test2", "test2");
+  }
 }
