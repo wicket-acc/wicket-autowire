@@ -24,10 +24,10 @@ public class BasicPage extends WebPage {
 
 	private static final long serialVersionUID = 1L;
 
-	@Component
+	@AutoComponent
 	TestLink link;
 
-	@Component
+	@AutoComponent
 	Label label;
 
 	class TestLink extends Link<Object> {

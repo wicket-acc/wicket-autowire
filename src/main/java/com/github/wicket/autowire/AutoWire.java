@@ -59,9 +59,9 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
       final List<AtomicReference<Component>> parent = Arrays.asList(new AtomicReference<Component>(component));
       while (Component.class.isAssignableFrom(clazz)) {
         for (final Field field : clazz.getDeclaredFields()) {
-          if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
-            if (field.getAnnotation(com.github.wicket.autowire.Component.class).inject()) {
-              String id = field.getAnnotation(com.github.wicket.autowire.Component.class).id();
+          if (field.isAnnotationPresent(com.github.wicket.autowire.AutoComponent.class)) {
+            if (field.getAnnotation(com.github.wicket.autowire.AutoComponent.class).inject()) {
+              String id = field.getAnnotation(com.github.wicket.autowire.AutoComponent.class).id();
               String name = id.isEmpty() ? field.getName() : id;
               buildComponent(parent, name);
             }
@@ -174,8 +174,8 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
           Field field = null;
           // look for annotated field
           for (Field iter : clazz.getDeclaredFields()) {
-            if (iter.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
-              com.github.wicket.autowire.Component ann = iter.getAnnotation(com.github.wicket.autowire.Component.class);
+            if (iter.isAnnotationPresent(com.github.wicket.autowire.AutoComponent.class)) {
+              com.github.wicket.autowire.AutoComponent ann = iter.getAnnotation(com.github.wicket.autowire.AutoComponent.class);
               if (ann.id().equals(id)) {
                 field = iter;
                 break;
@@ -186,17 +186,20 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
           if (field == null) {
             field = clazz.getDeclaredField(id);
           }
-          if (field.isAnnotationPresent(com.github.wicket.autowire.Component.class)) {
+          if (field.isAnnotationPresent(com.github.wicket.autowire.AutoComponent.class)) {
             field.setAccessible(true);
             instance = (Component) field.get(tryal.get());
             if (instance == null) {
-              if (field.getAnnotation(com.github.wicket.autowire.Component.class).inject()) {
+              if (field.getAnnotation(com.github.wicket.autowire.AutoComponent.class).inject()) {
                 instance = getInstance(field.getType(), stack, id);
-                field.set(tryal.get(), instance);
+                setValue(instance, tryal.get(), field);
               }
               else {
                 throw new RuntimeException("Field " + field.getName() + " must be assigned manually!");
               }
+            }
+            if (instance != null) {
+              return instance;
             }
           }
         }
@@ -223,11 +226,22 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
         }
         clazz = clazz.getSuperclass();
       }
-      if (instance != null) {
-        break;
-      }
     }
-    return instance;
+    return null;
+  }
+
+  // set value on duplicated field of parend classes too!
+  private void setValue(Component instance, final Component component, Field field) throws IllegalAccessException {
+    Class<?> clazz = field.getDeclaringClass();
+    while (Component.class.isAssignableFrom(clazz)) {
+      for (Field f : clazz.getDeclaredFields()) {
+        if (f.getName().equals(field.getName())) {
+          f.setAccessible(true);
+          f.set(component, instance);
+        }
+      }
+      clazz = clazz.getSuperclass();
+    }
   }
 
   private Component getInstance(final Class<?> componentClass,

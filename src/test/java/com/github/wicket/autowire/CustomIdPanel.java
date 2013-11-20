@@ -27,6 +27,6 @@ public class CustomIdPanel extends Panel {
     super(id);
   }
 
-  @Component(id = "customId") Label label;
+  @AutoComponent(id = "customId") Label label;
 
 }

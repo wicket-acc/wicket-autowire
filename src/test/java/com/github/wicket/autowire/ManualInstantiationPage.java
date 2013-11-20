@@ -24,10 +24,10 @@ public class ManualInstantiationPage extends WebPage {
 
 	private static final long serialVersionUID = 1L;
 
-	@Component
+	@AutoComponent
 	Label test1 = new Label("test1", "test1");
 
-	@Component
+	@AutoComponent
 	Label test2;
 
 	@Override

@@ -23,6 +23,6 @@ public class MissingCloseTagPage extends WebPage {
 
   private static final long serialVersionUID = 1L;
 
-  @Component TextField<String> test = new TextField<String>("test");
+  @AutoComponent TextField<String> test = new TextField<String>("test");
 
 }

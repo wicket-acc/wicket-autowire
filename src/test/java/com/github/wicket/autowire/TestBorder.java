@@ -23,10 +23,10 @@ public class TestBorder extends Border {
 
   private static final long serialVersionUID = 1L;
 
-  @Component
+  @AutoComponent
   Label borderLabel1;
 
-  @Component
+  @AutoComponent
   Label borderLabel2;
 
   public TestBorder(final String id) {

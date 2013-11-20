@@ -20,7 +20,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
 
-import com.github.wicket.autowire.Component;
+import com.github.wicket.autowire.AutoComponent;
 
 public class BasicPanel extends Panel {
 
@@ -30,10 +30,10 @@ public class BasicPanel extends Panel {
     super(id);
   }
 
-  @Component
+  @AutoComponent
   TestLink link;
 
-  @Component
+  @AutoComponent
   Label label;
 
   class TestLink extends Link<Object> {

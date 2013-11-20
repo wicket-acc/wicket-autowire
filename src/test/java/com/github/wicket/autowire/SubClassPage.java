@@ -22,7 +22,7 @@ public class SubClassPage extends BasicPage {
 
 	private static final long serialVersionUID = 1L;
 
-	@Component
+	@AutoComponent
 	Label label2;
 
 	@Override

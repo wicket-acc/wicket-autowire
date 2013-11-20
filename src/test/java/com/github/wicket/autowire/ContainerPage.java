@@ -24,10 +24,10 @@ public class ContainerPage extends WebPage {
 
   private static final long serialVersionUID = 1L;
 
-  @Component WebMarkupContainer container;
+  @AutoComponent WebMarkupContainer container;
 
-  @Component WebMarkupContainer subContainer;
+  @AutoComponent WebMarkupContainer subContainer;
 
-  @Component Label label;
+  @AutoComponent Label label;
 
 }
