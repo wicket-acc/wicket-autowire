@@ -5,14 +5,11 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law
+ * or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
  */
 package com.github.wicket.autowire;
 
@@ -30,13 +27,10 @@ import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.application.IComponentInitializationListener;
 import org.apache.wicket.application.IComponentInstantiationListener;
-import org.apache.wicket.markup.ComponentTag;
-import org.apache.wicket.markup.IMarkupFragment;
-import org.apache.wicket.markup.MarkupNotFoundException;
-import org.apache.wicket.markup.MarkupStream;
-import org.apache.wicket.markup.WicketTag;
+import org.apache.wicket.markup.*;
 import org.apache.wicket.markup.html.TransparentWebMarkupContainer;
 import org.apache.wicket.markup.html.border.Border;
+import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.resolver.WicketContainerResolver;
 
 public final class AutoWire implements IComponentInitializationListener, IComponentInstantiationListener {
@@ -59,9 +53,9 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
       final List<AtomicReference<Component>> parent = Arrays.asList(new AtomicReference<Component>(component));
       while (Component.class.isAssignableFrom(clazz)) {
         for (final Field field : clazz.getDeclaredFields()) {
-          if (field.isAnnotationPresent(com.github.wicket.autowire.AutoComponent.class)) {
-            if (field.getAnnotation(com.github.wicket.autowire.AutoComponent.class).inject()) {
-              String id = field.getAnnotation(com.github.wicket.autowire.AutoComponent.class).id();
+          if (field.isAnnotationPresent(AutoComponent.class)) {
+            if (field.getAnnotation(AutoComponent.class).inject()) {
+              String id = field.getAnnotation(AutoComponent.class).id();
               String name = id.isEmpty() ? field.getName() : id;
               buildComponent(parent, name);
             }
@@ -90,8 +84,22 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
         // detect borders.
         boolean addToBorder = false;
 
+        System.out.println("Performing auto wiring for component " + component);
+
+        // no associated markup: component tag is part of the markup
+        MarkupElement containerTag = null;
+        // current criteria is fragile! find better way to check if component tag of component is part its markup.
+        if (skipFirstComponentTag(component, stream)) {
+          System.out.println("Skipped component tag " + stream.get());
+          containerTag = stream.get();
+          stream.next();
+        }
+
         while (stream.skipUntil(ComponentTag.class)) {
           final ComponentTag tag = stream.getTag();
+
+          System.out.println("Processing tag " + tag);
+
           // track border tags
           if (tag instanceof WicketTag) {
             if (((WicketTag) tag).isBorderTag() && tag.isOpen()) {
@@ -107,18 +115,25 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
               addToBorder = false;
             }
           }
+
+          System.out.println("addToBorder? " + addToBorder);
+
           // maintain bread crumbs and build components
-          if (!(tag instanceof WicketTag) && !tag.isAutoComponentTag()
-              || tag.getName().equals(WicketContainerResolver.CONTAINER)) {
+          if (isComponentTag(tag)) {
             if (tag.isOpen() || tag.isOpenClose()) {
               final Component container = stack.peek().get();
               final Component cmp;
+
+              System.out.println("Current parent component is " + container);
               if (container == null) {
                 cmp = null;
               }
               else {
                 cmp = buildComponent(stack, tag.getId());
               }
+
+              System.out.println("Resolved component is " + cmp + ". Adding to parent now.");
+
               if (cmp != null) {
                 if (container instanceof MarkupContainer) {
                   if (addToBorder && container instanceof Border) {
@@ -139,13 +154,21 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
               }
               // push even if cmp is null, to track if parent is auto-wired
               if (tag.isOpen() && !tag.hasNoCloseTag()) {
+                System.out.println("Tag has a body. Adding to stack now.");
                 stack.push(new AtomicReference<Component>(cmp));
+                System.out.println("Current stack: " + stack);
               }
             }
             else if (tag.isClose() && !tag.getOpenTag().isAutoComponentTag()) {
-              stack.pop();
+              // the container tag is part of the inherited markup. do not pop stack on container tag close.
+              if (containerTag == null || !tag.closes(containerTag)) {
+                System.out.println("Tag is closing. Pop the stack now.");
+                stack.pop();
+                System.out.println("Current stack: " + stack);
+              }
             }
           }
+          System.out.println("--- Tag done. ---");
           stream.next();
         }
         if (stack.size() != 1) {
@@ -157,6 +180,24 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
         return;
       }
     }
+  }
+
+  private boolean skipFirstComponentTag(Component component, MarkupStream stream) {
+    if (stream.get() instanceof ComponentTag
+        && ((ComponentTag) stream.get()).getId().equals(component.getId())) {
+      return true;
+    }
+    else if (component instanceof ListItem) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
+  private boolean isComponentTag(ComponentTag tag) {
+    return !(tag instanceof WicketTag) && !tag.isAutoComponentTag()
+           || tag.getName().equals(WicketContainerResolver.CONTAINER);
   }
 
   private boolean isAutoWiringPossible(final Component component) {
@@ -174,9 +215,15 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
           Field field = null;
           // look for annotated field
           for (Field iter : clazz.getDeclaredFields()) {
-            if (iter.isAnnotationPresent(com.github.wicket.autowire.AutoComponent.class)) {
-              com.github.wicket.autowire.AutoComponent ann = iter.getAnnotation(com.github.wicket.autowire.AutoComponent.class);
+            if (iter.isAnnotationPresent(AutoComponent.class)) {
+              AutoComponent ann = iter.getAnnotation(AutoComponent.class);
               if (ann.id().equals(id)) {
+                field = iter;
+                break;
+              }
+              iter.setAccessible(true);
+              Component value = (Component) iter.get(tryal.get());
+              if (value != null && value.getId().equals(id)) {
                 field = iter;
                 break;
               }
@@ -186,11 +233,11 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
           if (field == null) {
             field = clazz.getDeclaredField(id);
           }
-          if (field.isAnnotationPresent(com.github.wicket.autowire.AutoComponent.class)) {
+          if (field.isAnnotationPresent(AutoComponent.class)) {
             field.setAccessible(true);
             instance = (Component) field.get(tryal.get());
             if (instance == null) {
-              if (field.getAnnotation(com.github.wicket.autowire.AutoComponent.class).inject()) {
+              if (field.getAnnotation(AutoComponent.class).inject()) {
                 instance = getInstance(field.getType(), stack, id);
                 setValue(instance, tryal.get(), field);
               }

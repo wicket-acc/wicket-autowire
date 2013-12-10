@@ -70,4 +70,9 @@ public class AutoWireTest {
   public void testMissingCloseTag() {
     this.tester.startPage(MissingCloseTagPage.class);
   }
+
+  @Test
+  public void testChildMarkupContainer() {
+    this.tester.startPage(ChildMarkupContainer.class);
+  }
 }
