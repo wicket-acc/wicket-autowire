@@ -19,7 +19,7 @@ Now components are built and added to page automatically and at the right place.
 	
 		private static final long serialVersionUID = 1L;
 	
-		@Component
+		@AutoComponent
 		Label label;
 	
 		public BasicPanel(final String id) {
@@ -32,10 +32,10 @@ The only precondition for injection is a single argument constructor. For Links,
 
 If you want to create and assign components manually, disable injection:
 
-	@Component(inject=false)
+	@AutoComponent(inject=false)
 	Link<?> link;
 
 Sometimes the component id is not suitable for a java identifier. No problem, just annotate the id:
 
-	@Component(id="like-button")
+	@AutoComponent(id="like-button")
 	LikeButton likeButton;
