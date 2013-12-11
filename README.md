@@ -28,4 +28,14 @@ Now components are built and added to page automatically and at the right place.
 	
 	}
 
-The only precondition is a single argument constructor. For a Link we recommend to use a non-anonymous inner class.
+The only precondition for injection is a single argument constructor. For Links, that are typically anonymous inner classes, you can use regular inner classes.
+
+If you want to create and assign components manually, disable injection:
+
+	@Component(inject=false)
+	Link<?> link;
+
+Sometimes the component id is not suitable for a java identifier. No problem, just annotate the id:
+
+	@Component(id="like-button")
+	LikeButton likeButton;
