@@ -37,13 +37,14 @@ How it works:
 -------------
 
 Wicket auto-wire works in two phases:
+
 1. On construction, it injects the components of the annotated fields
 2. On initiation, it adds each component of an annoated field to its parent, corresponding to the html markup.
 
 Customizing
 -----------
 
-If you want to create and assign components manually, disable injection:
+If you want to create and assign components manually (for example if there is no suitable constructor), disable injection:
 
 	@AutoComponent(inject=false)
 	Link<?> link;
