@@ -55,6 +55,6 @@ Sometimes the component id is not a valid java identifier. No problem, just anno
 Limitations
 -----------
 
-* Eeach auto wired component must be a direct child of the declaring component or must have an auto-wired parent, that is also declared in the same component.
+* Each auto-wired component must be a direct child of the declaring component or must have an auto-wired parent, that is also declared in the same component.
 * It is not possible to access a field of the enclosing class in the constructor of an auto-wired non-static inner class.
 * Injected components need a constructor with wicket id as the only parameter. For Links, that are typically anonymous inner classes, you can use regular inner classes.
