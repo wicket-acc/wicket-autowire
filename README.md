@@ -6,7 +6,7 @@ Annotation based auto wiring of wicket components. We deploy to maven central, s
 	<dependency>
 		<groupId>com.github.wicket-acc</groupId>
 		<artifactId>wicket-autowire</artifactId>
-		<version>0.0.3</version>
+		<version>0.0.4</version>
 	</dependency>
 
 How to use:
