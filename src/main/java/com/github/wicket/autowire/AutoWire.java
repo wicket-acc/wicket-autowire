@@ -77,6 +77,7 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
     List<Action> actions = new ArrayList<Action>();
 
     if (isAutoWiringPossible(component)) {
+      Set<String> done = new HashSet<String>();
       Class<?> clazz = component.getClass();
       // iterate over class hierarchy
       while (Component.class.isAssignableFrom(clazz)) {
@@ -89,13 +90,17 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
             AutoComponent ann = field.getAnnotation(AutoComponent.class);
             if (ann.inject()) {
               final String id = ann.id().isEmpty() ? field.getName() : ann.id();
-              Component value = getValue(component, field);
-              if (value == null) {
-                actions.add(new AssignInstanceAction(field, id));
-              }
-              else {
-                if (log.isTraceEnabled()) {
-                  log.trace("Field " + field.getName() + " is already initialized. skipping.");
+              // fields in super classes are ignored, if they are in subclasses too
+              if (!done.contains(id)) {
+                done.add(id);
+                Component value = getValue(component, field);
+                if (value == null) {
+                  actions.add(new AssignInstanceAction(field, id));
+                }
+                else {
+                  if (log.isTraceEnabled()) {
+                    log.trace("Field " + field.getName() + " is already initialized. skipping.");
+                  }
                 }
               }
             }
