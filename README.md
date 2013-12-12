@@ -49,7 +49,7 @@ If you want to create and assign components manually (for example if there is no
 	@AutoComponent(inject=false)
 	Link<?> link;
 
-Sometimes the component id is not suitable for a java identifier. No problem, just annotate the id:
+Sometimes the component id is not a valid java identifier. No problem, just annotate the id:
 
 	@AutoComponent(id="like-button")
 	LikeButton likeButton;
