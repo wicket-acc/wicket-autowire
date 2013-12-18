@@ -1,7 +1,18 @@
 wicket-autowire [![Build Status](https://travis-ci.org/wicket-acc/wicket-autowire.png?branch=master)](https://travis-ci.org/wicket-acc/wicket-autowire)
 =================================================================================================================================================
 
-Annotation based auto wiring of wicket components. We deploy to maven central, so just add the following lines to your pom.xml:
+Apache Wicket is a great framework for web applications, and the decoupling of logic and layout is good, with one limitation:
+You have to "rebuild" the component hierarchy of your markup in your java code. Using this library makes your life easier:
+
+* You don't have to add a component to its parent yourself.
+* You can skip a component in the markup if you want to.
+* You can simply have differenty styles with completely different component positions.
+* You dont have to call the constructor of the component and pass the id as a string.
+
+How to use:
+-----------
+
+Add the following lines to your pom.xml:
 
 	<dependency>
 		<groupId>com.github.wicket-acc</groupId>
@@ -9,10 +20,7 @@ Annotation based auto wiring of wicket components. We deploy to maven central, s
 		<version>0.0.4</version>
 	</dependency>
 
-How to use:
------------
-
-To enable in your wicket application, install wicket-autowire in your application's init() method:
+To enable auto-wire in your wicket application, install wicket-autowire in your application's init() method:
 
 	AutoWire.install(this);
 
@@ -36,7 +44,7 @@ How it works:
 
 Wicket auto-wire works in two phases:
 
-1. On construction, it injects the components of the annotated fields
+1. On construction, it injects components to the annotated fields
 2. On initiation, it adds each component of an annoated field to its parent, corresponding to the html markup.
 
 Customizing
