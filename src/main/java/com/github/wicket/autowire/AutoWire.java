@@ -38,13 +38,10 @@ import static java.util.Map.Entry;
 
 public final class AutoWire implements IComponentInitializationListener, IComponentInstantiationListener {
 
-  private static final Logger log = LoggerFactory.getLogger(Component.class);
-
-  private AutoWire() {
-
-  }
-
+  private static final Logger log = LoggerFactory.getLogger(AutoWire.class);
   private static final ComponentCache cache = new ComponentCache();
+
+  private AutoWire() { }
 
   public static void install(final Application application) {
     final AutoWire instance = new AutoWire();
@@ -57,15 +54,13 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
     Value value = cache.get(component.getClass());
     if (value == null) {
       if (log.isTraceEnabled()) {
-        log.trace("MISS");
+        log.trace("Cache miss");
       }
 
       synchronized (AutoWire.class) {
         value = cache.get(component.getClass());
         if (value == null) {
-          List<Action> actions = getInstantiationActions(component);
-
-          value = new Value(actions);
+          value = getInstantiationActions(component);
           cache.put(component.getClass(), value);
         }
       }
@@ -73,8 +68,15 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
     value.performInstantiationActions(component);
   }
 
-  private List<Action> getInstantiationActions(Component component) {
+  boolean hasAutoComponentAnnotatedFields(Class clazz) {
+    synchronized (AutoWire.class) {
+      return cache.get(clazz).hasAutoComponentAnnotatedFields;
+    }
+  }
+
+  private Value getInstantiationActions(Component component) {
     List<Action> actions = new ArrayList<Action>();
+    boolean foundAnnotationAutoComponent = false;
 
     if (isAutoWiringPossible(component)) {
       Set<String> done = new HashSet<String>();
@@ -84,9 +86,10 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
         if (log.isTraceEnabled()) {
           log.trace("looking for fields in class " + clazz);
         }
-        // iterate over declared field
+        // iterate over declared fields
         for (final Field field : clazz.getDeclaredFields()) {
           if (field.isAnnotationPresent(AutoComponent.class)) {
+            foundAnnotationAutoComponent = true;
             AutoComponent ann = field.getAnnotation(AutoComponent.class);
             if (ann.inject()) {
               final String id = ann.id().isEmpty() ? field.getName() : ann.id();
@@ -114,7 +117,7 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
       log.trace("Actions: " + actions);
     }
 
-    return actions;
+    return new Value(actions, foundAnnotationAutoComponent);
   }
 
   private static Component getValue(Component component, Field field) {
@@ -138,7 +141,7 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
         value.performInitializeActions(component);
       }
       catch (final MarkupNotFoundException e) {
-        return;
+        //Nothing to do
       }
     }
   }
@@ -150,35 +153,25 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
   private static Component buildComponent(Component component, final String id, Node child) {
     Class<?> clazz = component.getClass();
     while (Component.class.isAssignableFrom(clazz)) {
-      try {
-        Field field = null;
-        Component value = null;
-        // look for annotated field
-        for (Field iter : clazz.getDeclaredFields()) {
-          if (iter.isAnnotationPresent(AutoComponent.class)) {
-            value = getValue(component, iter);
-            if (value != null && value.getId().equals(id)) {
-              child.field = iter;
-              break;
-            }
-            else {
-              value = null;
-            }
+      Component value = null;
+      // look for annotated field
+      for (Field iter : clazz.getDeclaredFields()) {
+        if (iter.isAnnotationPresent(AutoComponent.class)) {
+          value = getValue(component, iter);
+          if (value != null && value.getId().equals(id)) {
+            child.field = iter;
+            break;
+          }
+          else {
+            value = null;
           }
         }
-        if (value != null) {
-          return value;
-        }
       }
-      catch (final SecurityException e) {
-        throw new RuntimeException(e);
-      }
-      catch (final IllegalArgumentException e) {
-        throw new RuntimeException(e);
+      if (value != null) {
+        return value;
       }
       clazz = clazz.getSuperclass();
     }
-
     return null;
   }
 
@@ -224,11 +217,15 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
 
   private static class Value {
 
-    private List<Action> instantiationActions;
-    private Map<String, Node> cache = new ConcurrentHashMap<String, Node>();
+    private static final int THRESHOLD_MILLIS = 8 * 24 * 60 * 60 * 1000;
 
-    public Value(List<Action> instantiationActions) {
+    private final Map<String, Node> cache = new ConcurrentHashMap<String, Node>();
+    private final List<Action> instantiationActions;
+    private final boolean hasAutoComponentAnnotatedFields;
+
+    public Value(List<Action> instantiationActions, boolean hasAutoComponentAnnotatedFields) {
       this.instantiationActions = instantiationActions;
+      this.hasAutoComponentAnnotatedFields = hasAutoComponentAnnotatedFields;
     }
 
     public void performInstantiationActions(Component component) {
@@ -240,7 +237,7 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
     public void performInitializeActions(Component component) {
       final IMarkupFragment markup = ((MarkupContainer) component).getMarkup(null);
 
-      if (markup == null) {
+      if (markup == null || !hasAutoComponentAnnotatedFields) {
         return;
       }
 
@@ -265,13 +262,13 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
       cleanup();
     }
 
-    // avoid memory leaks if makup is changing often.
+    // avoid memory leaks if markup changes often.
     private void cleanup() {
-      long treshold = System.currentTimeMillis() - 8 * 24 * 60 * 60 * 1000;
       if (cache.size() > 30) {
+        long threshold = System.currentTimeMillis() - THRESHOLD_MILLIS;
         for (Iterator<Entry<String, Node>> iterator = cache.entrySet().iterator(); iterator.hasNext();) {
           Entry<String, Node> next = iterator.next();
-          if (next.getValue().lastUsed < treshold) {
+          if (next.getValue().lastUsed < threshold) {
             iterator.remove();
           }
         }
@@ -296,7 +293,7 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
 
       // no associated markup: component tag is part of the markup
       MarkupElement containerTag = null;
-      // current criteria is fragile! find better way to check if component tag of component is part its markup.
+      //TODO current criteria is fragile! find better way to check if component tag of component is part its markup.
       if (skipFirstComponentTag(component, stream)) {
         if (log.isTraceEnabled()) {
           log.trace("Skipped component tag " + stream.get());

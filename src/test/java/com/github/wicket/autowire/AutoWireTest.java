@@ -13,13 +13,17 @@
  */
 package com.github.wicket.autowire;
 
+import org.apache.wicket.application.IComponentInitializationListener;
 import org.apache.wicket.util.tester.WicketTester;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 public class AutoWireTest {
 
-  private WicketTester tester;
+  private AutoWireTester tester;
 
   @Before
   public void setUp() {
@@ -41,11 +45,55 @@ public class AutoWireTest {
   }
 
   /**
+   * Assert that {@link AutoWire#hasAutoComponentAnnotatedFields(Class class)} returns true for classes
+   * with AutoComponent annotated fields.
+   */
+  @Test
+  public void testAutoComponentMissingWithPanel() {
+    this.tester.startComponentInPage(AutoComponentMissingInPanel.class);
+    assertFalse(getAutoWire().hasAutoComponentAnnotatedFields(AutoComponentMissingInPanel.class));
+  }
+
+  /**
+   * Assert that {@link AutoWire#hasAutoComponentAnnotatedFields(Class class)} returns true for classes
+   * with AutoComponent annotated fields.
+   */
+  @Test
+  public void testAutoComponentMissingInChildWithMarkupContainer() {
+    this.tester.startPage(AutoComponentInParentMarkupContainer.class);
+    AutoWire autoWire = getAutoWire();
+    assertTrue(autoWire.hasAutoComponentAnnotatedFields(AutoComponentInParentMarkupContainer.class));
+    assertFalse(autoWire.hasAutoComponentAnnotatedFields(AutoComponentInParentMarkupContainer.NestedContainer.class));
+  }
+
+  /**
+   * Assert that {@link AutoWire#hasAutoComponentAnnotatedFields(Class class)} returns true for classes
+   * with AutoComponent annotated fields.
+   */
+  @Test
+  public void testAutoComponentMissingInParentWithMarkupContainer() {
+    this.tester.startPage(AutoComponentInChildMarkupContainer.class);
+    AutoWire autoWire = getAutoWire();
+    assertFalse(autoWire.hasAutoComponentAnnotatedFields(AutoComponentInChildMarkupContainer.class));
+    assertTrue(autoWire.hasAutoComponentAnnotatedFields(AutoComponentInChildMarkupContainer.NestedContainer.class));
+  }
+
+  /**
    * Assert that fields of parent class are processed too.
    */
   @Test
   public void testSubClassPage() {
     this.tester.startPage(SubClassPage.class);
+    assertTrue(getAutoWire().hasAutoComponentAnnotatedFields(SubClassPage.class));
+  }
+
+  private AutoWire getAutoWire() {
+    for (IComponentInitializationListener listener : this.tester.getApplication().getComponentInitializationListeners()) {
+      if (listener instanceof AutoWire) {
+        return (AutoWire) listener;
+      }
+    }
+    return null;
   }
 
   /**
@@ -56,6 +104,7 @@ public class AutoWireTest {
   @Test
   public void testContainer() {
     this.tester.startPage(ContainerPage.class);
+    assertTrue(getAutoWire().hasAutoComponentAnnotatedFields(ContainerPage.class));
   }
 
   /**
@@ -65,6 +114,7 @@ public class AutoWireTest {
   @Test
   public void testBorder() {
     this.tester.startPage(BorderPage.class);
+    assertTrue(getAutoWire().hasAutoComponentAnnotatedFields(BorderPage.class));
   }
 
   /**
@@ -74,6 +124,7 @@ public class AutoWireTest {
   @Test
   public void testCustomId() {
     this.tester.startComponentInPage(CustomIdPanel.class);
+    assertTrue(getAutoWire().hasAutoComponentAnnotatedFields(CustomIdPanel.class));
   }
 
   /**
@@ -85,6 +136,7 @@ public class AutoWireTest {
     this.tester.startPage(ManualInstantiationPage.class);
     this.tester.assertLabel("test1", "test1");
     this.tester.assertLabel("test2", "test2");
+    assertTrue(getAutoWire().hasAutoComponentAnnotatedFields(ManualInstantiationPage.class));
   }
 
   /**
@@ -100,6 +152,7 @@ public class AutoWireTest {
   @Test
   public void testMissingCloseTag() {
     this.tester.startPage(MissingCloseTagPage.class);
+    assertTrue(getAutoWire().hasAutoComponentAnnotatedFields(MissingCloseTagPage.class));
   }
 
   /**
@@ -109,6 +162,9 @@ public class AutoWireTest {
   @Test
   public void testChildMarkupContainer() {
     this.tester.startPage(ChildMarkupContainer.class);
+    AutoWire autoWire = getAutoWire();
+    assertTrue(autoWire.hasAutoComponentAnnotatedFields(ChildMarkupContainer.class));
+    assertTrue(autoWire.hasAutoComponentAnnotatedFields(ChildMarkupContainer.NestedContainer.class));
   }
 
   /**
@@ -126,10 +182,8 @@ public class AutoWireTest {
    */
   @Test
   public void testPerformanceCompare() {
-    this.tester = new WicketTester();
-
     long begin = System.currentTimeMillis();
-    this.tester.startPage(PerformanceCompareTest.class);
+    new WicketTester().startPage(PerformanceCompareTest.class);
     System.out.println("Performance compare test took " + (System.currentTimeMillis() - begin) + "ms");
   }
 }
