@@ -18,7 +18,7 @@
 	<groupId>com.github.wicket-acc</groupId>
 	<artifactId>wicket-autowire</artifactId>
 	<packaging>jar</packaging>
-	<version>0.0.5</version>
+	<version>0.0.6-SNAPSHOT</version>
 	<name>Wicket Accessoires :: Wicket Autowire</name>
 	<description>Annotation based auto wiring of wicket components.</description>
 	<licenses>
@@ -180,7 +180,7 @@
 		<url>https://github.com/wicket-acc/wicket-autowire.git</url>
 		<connection>scm:git:git@github.com/wicket-acc/wicket-autowire.git</connection>
 		<developerConnection>scm:git:git@github.com:wicket-acc/wicket-autowire.git</developerConnection>
-	  <tag>wicket-autowire-0.0.5</tag>
+	  <tag>HEAD</tag>
   </scm>
 	<developers>
 		<developer>
