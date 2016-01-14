@@ -17,7 +17,7 @@ Add the following lines to your pom.xml:
 	<dependency>
 		<groupId>com.github.wicket-acc</groupId>
 		<artifactId>wicket-autowire</artifactId>
-		<version>0.0.4</version>
+		<version>1.0.0</version>
 	</dependency>
 
 To enable auto-wire in your wicket application, install wicket-autowire in your application's init() method:
@@ -27,8 +27,6 @@ To enable auto-wire in your wicket application, install wicket-autowire in your 
 Now components are built and added to page automatically and at the right place. The wicket id is taken from the field's name:
 
 	public class BasicPanel extends Panel {
-	
-		private static final long serialVersionUID = 1L;
 	
 		@AutoComponent
 		Label label;
