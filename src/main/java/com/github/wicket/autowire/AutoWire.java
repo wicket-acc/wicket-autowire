@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.wicket.Application;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.application.IComponentInitializationListener;
 import org.apache.wicket.application.IComponentInstantiationListener;
 import org.apache.wicket.markup.ComponentTag;
@@ -522,16 +523,16 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
         setValue(instance, component, field);
       }
       catch (NoSuchMethodException e) {
-        e.printStackTrace();
+        throw new WicketRuntimeException(e);
       }
       catch (InstantiationException e) {
-        e.printStackTrace();
+        throw new WicketRuntimeException(e);
       }
       catch (IllegalAccessException e) {
-        e.printStackTrace();
+        throw new WicketRuntimeException(e);
       }
       catch (InvocationTargetException e) {
-        e.printStackTrace();
+        throw new WicketRuntimeException(e);
       }
     }
   }
