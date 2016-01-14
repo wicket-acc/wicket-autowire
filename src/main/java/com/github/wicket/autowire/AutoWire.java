@@ -13,11 +13,19 @@
  */
 package com.github.wicket.autowire;
 
+import static java.util.Map.Entry;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -26,7 +34,12 @@ import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.application.IComponentInitializationListener;
 import org.apache.wicket.application.IComponentInstantiationListener;
-import org.apache.wicket.markup.*;
+import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.IMarkupFragment;
+import org.apache.wicket.markup.MarkupElement;
+import org.apache.wicket.markup.MarkupNotFoundException;
+import org.apache.wicket.markup.MarkupStream;
+import org.apache.wicket.markup.WicketTag;
 import org.apache.wicket.markup.html.TransparentWebMarkupContainer;
 import org.apache.wicket.markup.html.border.Border;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -34,14 +47,13 @@ import org.apache.wicket.markup.resolver.WicketContainerResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.util.Map.Entry;
-
 public final class AutoWire implements IComponentInitializationListener, IComponentInstantiationListener {
 
   private static final Logger log = LoggerFactory.getLogger(AutoWire.class);
   private static final ComponentCache cache = new ComponentCache();
 
-  private AutoWire() { }
+  private AutoWire() {
+  }
 
   public static void install(final Application application) {
     final AutoWire instance = new AutoWire();
@@ -176,7 +188,9 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
   }
 
   // set value on duplicated field of parent classes too!
-  private static void setValue(Component instance, final Component component, Field field) throws IllegalAccessException {
+  private static void setValue(Component instance,
+                               final Component component,
+                               Field field) throws IllegalAccessException {
     Class<?> clazz = field.getDeclaringClass();
     while (Component.class.isAssignableFrom(clazz)) {
       for (Field f : clazz.getDeclaredFields()) {
@@ -191,11 +205,13 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
     }
   }
 
-  private Component getInstance(final Class<?> componentClass, final Component enclosing, final String id) throws NoSuchMethodException,
-                                                                                                          InstantiationException,
-                                                                                                          IllegalAccessException,
-                                                                                                          IllegalArgumentException,
-                                                                                                          InvocationTargetException {
+  private Component getInstance(final Class<?> componentClass,
+                                final Component enclosing,
+                                final String id) throws NoSuchMethodException,
+                                                 InstantiationException,
+                                                 IllegalAccessException,
+                                                 IllegalArgumentException,
+                                                 InvocationTargetException {
     if (componentClass.getEnclosingClass() == null || Modifier.isStatic(componentClass.getModifiers())) {
       // -- Static inner class or normal class
       final Constructor<?> constructor = componentClass.getDeclaredConstructor(String.class);
@@ -235,9 +251,13 @@ public final class AutoWire implements IComponentInitializationListener, ICompon
     }
 
     public void performInitializeActions(Component component) {
+      if (!hasAutoComponentAnnotatedFields) {
+        return;
+      }
+
       final IMarkupFragment markup = ((MarkupContainer) component).getMarkup(null);
 
-      if (markup == null || !hasAutoComponentAnnotatedFields) {
+      if (markup == null) {
         return;
       }
 
